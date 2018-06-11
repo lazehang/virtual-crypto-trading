@@ -16,14 +16,13 @@ class App extends React.Component {
             <Link to="/teams"> Teams</Link>
             <Link to="/venues"> Venues</Link>
           </header>
-          <p className="App-intro">
+      
           <Switch>
             <Route exact={true} path="/teams" component={TeamList} />
             <Route path="/teams/:id" component={TeamDetail} />
             <Route path="/teams/add" component={TeamDetail} />
           </Switch>
-            
-          </p>
+     
         </div>
       </Provider>
     );

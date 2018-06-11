@@ -1,13 +1,17 @@
+import * as History from 'history';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { match } from 'react-router-dom';
 import { IPlayer, ITeam } from 'src/model';
-import { addTeam } from 'src/redux/team/actions';
+import { editTeam, remoteAddTeam } from 'src/redux/team/actions';
 import { IRootState } from '../redux/store';
 
 interface ITeamDetailProps {
+  team?: ITeam;
   match: match<{id: string}>;
   addTeam: (team: ITeam) => void;
+  editTeam: (team: ITeam) => void;
+  history: History.History;
 }
 
 interface ITeamDetailStates {
@@ -31,11 +35,19 @@ class PureTeamDetail extends React.Component<ITeamDetailProps, ITeamDetailStates
           
       ]
     };
+
+    if (this.props.team != null) {
+      this.state = {
+        color: this.props.team.color,
+        name: this.props.team.name,
+        players: this.props.team.players.slice()
+      };
+    }
   }
   public render() {
     return (
       <div>
-        // tslint:disable-next-line:radix
+      
         <h2>{!isNaN(parseInt(this.props.match.params.id, 10)) ? 'Editing Team' : 'Add New Team'}</h2>
         <div>
           <label>Team Name : </label>
@@ -74,12 +86,24 @@ class PureTeamDetail extends React.Component<ITeamDetailProps, ITeamDetailStates
     );
   }
   private handleSave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (this.props.team != null) {
+      this.props.editTeam({
+        id: this.props.team.id,
+        name: this.state.name,
+        // tslint:disable-next-line:object-literal-sort-keys
+        color: this.state.color,
+        players: this.state.players
+      });
+    } else {
     this.props.addTeam({
       color: this.state.color,      
-      id: 1,
+      id: Date.now(),
       name: this.state.name,
       players: this.state.players
     });
+
+    this.props.history.push("/teams");
+  }
   }
 
   private handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,10 +158,11 @@ class PureTeamDetail extends React.Component<ITeamDetailProps, ITeamDetailStates
   }
 }
 
-const TeamDetail = connect((rootState: IRootState) => ({
-  
-}), (dispatch) => ({
-  addTeam: (team: ITeam) => { dispatch(addTeam(team.name, team.color, team.players)) }
+const TeamDetail = connect((rootState: IRootState, ownProps: {match: match<{id: string}>}) => ({
+  team: rootState.team.teams.find(t => t.id === parseInt(ownProps.match.params.id, 10))
+}), (dispatch: any) => ({
+  addTeam: (team: ITeam) => { dispatch(remoteAddTeam(team.name, team.color, team.players)) },
+  editTeam: (team: ITeam) => { dispatch(editTeam(team.id, team.name, team.color, team.players))}
 }))(PureTeamDetail);
 
 export default TeamDetail;
